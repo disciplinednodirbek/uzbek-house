@@ -1,0 +1,182 @@
+.house-options-card {
+  height: 440px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0px 20px 30px -10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  min-width: 260px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.4s ease;
+  margin: 0 10px;
+}
+.house-options-card:before {
+  height: 190px;
+  width: calc(100% + 100px);
+  content: "";
+  position: absolute;
+  background-image: linear-gradient(to top, #1f2c40 0%, #1d728e 100%);
+  border-radius: 4px 4px 100% 100%;
+  transition: all 0.4s ease-out;
+  top: 0;
+}
+
+.house-options-card article {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+.house-options-card article h2 {
+  color: white;
+  margin: 0;
+  padding: 40px 20px 10px 20px;
+  font-weight: 500;
+  font-size: 24px;
+  letter-spacing: 0.5px;
+}
+.house-options-card article .title {
+  color: white;
+  padding: 10px 20px;
+  letter-spacing: 0.8px;
+  transition: all 0.4s ease;
+}
+.house-options-card article .desc {
+  padding: 10px 30px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 24px;
+  color: #666;
+  height: 90px;
+  transition: all 0.4s ease-out;
+}
+.house-options-card article .pic {
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 100%;
+  margin: 20px 0;
+  box-shadow: 0px 0px 0px 0px rgba(255, 255, 255, 0.3);
+  transition: all 0.6s ease;
+}
+.house-options-card article .pic img {
+  width: 100%;
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
+}
+.house-options-card .actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background: white;
+  z-index: 1;
+}
+.house-options-card .actions .btn {
+  border: 0;
+  background-color: transparent;
+  box-sizing: border-box;
+  width: 100%;
+  height: 56px;
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 10px;
+  transition: all 0.6s ease-in-out;
+  cursor: pointer;
+  color: #fff;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+  font-family: "Barlow", sans-serif;
+  letter-spacing: 0.5px;
+  background: #1d728e;
+}
+.house-options-card .actions .btn span {
+  z-index: 1;
+  opacity: 1;
+  transition: all 0.4s ease-in-out;
+}
+.house-options-card .actions .btn .icon {
+  width: 10px;
+  opacity: 0;
+  position: absolute;
+  transition: all 0.2s ease-in-out;
+}
+.house-options-card .actions .btn:before {
+  content: "";
+  width: 100%;
+  height: 0%;
+  position: absolute;
+  background: #4481eb;
+  transition: all 0.4s ease;
+  bottom: 0;
+  opacity: 0.2;
+}
+.house-options-card .actions .btn:focus {
+  outline: 0;
+}
+.house-options-card .actions .btn:hover {
+  background-color: #ffffff;
+}
+.house-options-card .actions .btn:hover span {
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+.house-options-card .actions .btn:hover .icon {
+  width: 22px;
+  opacity: 1;
+  transition: all 0.4s ease-in-out;
+}
+.house-options-card .actions .btn:hover:nth-child(3) .icon {
+  width: 18px;
+}
+.house-options-card .actions .btn:hover:before {
+  height: 100%;
+}
+.house-options-card .actions .btn.clicked span {
+  display: none;
+}
+.house-options-card .actions .btn.clicked .icon {
+  width: 22px;
+  opacity: 1;
+  animation: icon 0.5s ease forwards;
+}
+@keyframes icon {
+  0% {
+    width: 22px;
+  }
+  50% {
+    width: 40px;
+  }
+  100% {
+    width: 22px;
+  }
+}
+.house-options-card .actions .btn.clicked:before {
+  opacity: 0.3;
+  height: 100%;
+}
+.house-options-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0px 5px 10px -5px rgba(0, 0, 0, 0.3);
+}
+.house-options-card:hover:before {
+  height: 100%;
+  border-radius: 4px;
+}
+.house-options-card:hover .desc {
+  color: white;
+}
+.house-options-card:hover .pic {
+  box-shadow: 0px 0px 0px 8px rgba(255, 255, 255, 0.3);
+}
+.house-options-card:hover .pic img {
+  -webkit-filter: grayscale(0%);
+  filter: grayscale(0%);
+}
