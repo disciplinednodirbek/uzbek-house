@@ -1,15 +1,21 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const LocalStrategy = require("passport-local").Strategy;
-const Bytescale = require("@bytescale/sdk");
+const ImageKit = require("imagekit");
 
 const dotenv = require("dotenv");
 dotenv.config({ path: "./configs/.env" });
-const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, BYTESCALE_SECRET } =
-  process.env;
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,IMAGEKIT_PUBLICKEY,IMAGEKIT_PRIVATEKEY,IMAGEKIT_URLENDPOINT } = process.env;
 const User = require("../models/User");
 
 const GOOGLE_CALLBACK_URL = "http://localhost:5000/api/v1/auth/google/callback";
+
+const imagekit = new ImageKit({
+  publicKey: IMAGEKIT_PUBLICKEY,
+  privateKey: IMAGEKIT_PRIVATEKEY,
+  urlEndpoint: IMAGEKIT_URLENDPOINT,
+});
+
 passport.use(
   new GoogleStrategy(
     {
@@ -19,49 +25,40 @@ passport.use(
       passReqToCallback: true,
     },
     async (req, accessToken, refreshToken, profile, cb) => {
-      console.log(profile);
-      const defaultUser = {
-        name: `${profile.name.givenName} ${profile.name.familyName}`,
-        email: profile.emails[0].value,
-        googleId: profile.id,
-      };
-
       try {
-        const existingUser = await User.findOne({ googleId: profile.id });
+        let profileImageURL = null;
 
-        if (existingUser) {
-          return cb(null, existingUser);
+        if (profile.photos && profile.photos.length > 0) {
+          const photoUrl = profile.photos[0].value;
+
+          const existingUser = await User.findOne({ googleId: profile.id });
+          if (existingUser && existingUser.image) {
+            profileImageURL = existingUser.image;
+          } else {
+            const imageUploadResponse = await imagekit.upload({
+              file: photoUrl,
+              fileName: `${profile.id}-profile-picture`,
+            });
+            profileImageURL = imageUploadResponse.url;
+          }
         }
 
-        const uploadManager = new Bytescale.UploadManager({
-          apiKey: "public_FW25bwn5QGkHc82DUEj1xny3mwub",
-        });
-
-        // Define the data you want to upload
-        const data = {
-          file: profile.photos[0].value, // Assuming this is the file content
+        const defaultUser = {
+          name: `${profile.name.givenName}${
+            profile.name.familyName ? " " + profile.name.familyName : ""
+          }`,
+          email: profile.emails[0].value,
+          googleId: profile.id,
+          image: profileImageURL,
         };
 
-        // Configure the options for the upload request
-        const options = {
-          method: "POST", // Specify the HTTP method as POST
-          headers: {
-            "Content-Type": "application/octet-stream", // Set the content type
-          },
-          body: data, // Set the body of the request with the file content
-        };
-
-        // Perform the upload using the uploadManager
-        uploadManager.upload(options).then(
-          ({ fileUrl, filePath }) => {
-            console.log(`File uploaded to: ${fileUrl} and ${filePath}`);
-            defaultUser.image = fileUrl;
-          },
-          (error) => console.error(`Error: ${error.message}`, error)
+        const existingUser = await User.findOneAndUpdate(
+          { googleId: profile.id },
+          defaultUser,
+          { upsert: true, new: true }
         );
 
-        const new_user = await User.create(defaultUser);
-        return cb(null, new_user);
+        return cb(null, existingUser);
       } catch (error) {
         cb(error, null);
       }
