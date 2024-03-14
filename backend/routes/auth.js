@@ -14,7 +14,6 @@ const { isAuthorized, isActiveUser } = require("../middlewares/routeProtect");
 router.post(
   "/email_login",
   passportLogin,
-  isAuthorized,
   isActiveUser,
   email_login
 );
