@@ -8,7 +8,7 @@ dotenv.config({ path: "./configs/.env" });
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,IMAGEKIT_PUBLICKEY,IMAGEKIT_PRIVATEKEY,IMAGEKIT_URLENDPOINT } = process.env;
 const User = require("../models/User");
 
-const GOOGLE_CALLBACK_URL = "http://localhost:5000/api/v1/auth/google/callback";
+const GOOGLE_CALLBACK_URL = "http://localhost:3000/api/v1/auth/google/callback";
 
 const imagekit = new ImageKit({
   publicKey: IMAGEKIT_PUBLICKEY,
