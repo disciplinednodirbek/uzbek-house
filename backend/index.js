@@ -15,6 +15,10 @@ dotenv.config({ path: "./configs/.env" });
 
 connectToDatabase();
 const authRouter = require("./routes/auth");
+const availableTimeRouter = require("./routes/availableTime");
+const conditionRouter = require("./routes/condition");
+const unitRouter = require("./routes/unit");
+const regionRouter = require("./routes/regions");
 
 const app = express();
 
@@ -55,6 +59,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/available-times", availableTimeRouter);
+app.use("/api/v1/conditions", conditionRouter);
+app.use("/api/v1/units", unitRouter);
+app.use("/api/v1/regions", regionRouter);
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
