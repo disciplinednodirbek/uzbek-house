@@ -14,7 +14,7 @@ const {
 } = process.env;
 const User = require("../models/User");
 
-const GOOGLE_CALLBACK_URL = "http://localhost:5000/api/v1/auth/google/callback";
+const GOOGLE_CALLBACK_URL = "http://localhost:3001/api/v1/auth/google/callback";
 
 const imagekit = new ImageKit({
   publicKey: IMAGEKIT_PUBLICKEY,
