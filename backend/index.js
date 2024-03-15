@@ -19,6 +19,8 @@ const availableTimeRouter = require("./routes/availableTime");
 const conditionRouter = require("./routes/condition");
 const unitRouter = require("./routes/unit");
 const regionRouter = require("./routes/regions");
+const userRouter = require("./routes/user");
+
 
 const app = express();
 
@@ -63,6 +65,7 @@ app.use("/api/v1/available-times", availableTimeRouter);
 app.use("/api/v1/conditions", conditionRouter);
 app.use("/api/v1/units", unitRouter);
 app.use("/api/v1/regions", regionRouter);
+app.use("/api/v1/user", userRouter);
 
 app.use(errorHandler);
 
