@@ -47,10 +47,10 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       maxAge: oneDay,
-      httpOnly: false,
+      secure: false,
     },
     store,
   })
@@ -64,7 +64,7 @@ app.use("/api/v1/available-times", availableTimeRouter);
 app.use("/api/v1/conditions", conditionRouter);
 app.use("/api/v1/units", unitRouter);
 app.use("/api/v1/regions", regionRouter);
-app.use("/api/v1/user", userRouter);
+app.use("/api/v1/users", userRouter);
 
 app.use(errorHandler);
 

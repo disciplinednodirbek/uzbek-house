@@ -43,15 +43,22 @@ exports.authGoogleRedirect = passport.authenticate("google", {
   successRedirect: successLoginUrl,
 });
 
-
 // description    user log out
 // route         GET /api/v1/auth/logout
 // access        Private
 exports.logout = asyncHandler(async (req, res, next) => {
-  req.logOut();
-  req.session.destroy();
-  return res.status(200).json({
-    success: true,
-    message: "logged out successfully",
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err);
+      }
+      return res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+      });
+    });
   });
 });

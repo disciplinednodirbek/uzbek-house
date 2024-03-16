@@ -19,6 +19,10 @@ const HouseSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Please add bathroom count"],
     },
+    phone_number: {
+      type: String,
+      required: [true, "Please add phone number"],
+    },
     bedroom_count: {
       type: Number,
       required: [true, "Please add bedroom count"],
