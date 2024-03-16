@@ -73,3 +73,25 @@ exports.getAllUsers = asyncHandler(async (req, res, next) => {
     data: users,
   });
 });
+
+// description      Delete user
+// route            DELETE /api/v1/user/:id
+// access           Private (only Super Admin can delete users)
+exports.deleteUser = asyncHandler(async (req, res, next) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+    if (!deletedUser) {
+      return next(
+        new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    res.status(200).json({ success: true, data: {} });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return next(
+      new ErrorResponse(`Error deleting user: ${error.message}`, 500)
+    );
+  }
+});

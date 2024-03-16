@@ -5,21 +5,15 @@ const ImageKit = require("imagekit");
 
 const dotenv = require("dotenv");
 dotenv.config({ path: "./configs/.env" });
-const {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  IMAGEKIT_PUBLICKEY,
-  IMAGEKIT_PRIVATEKEY,
-  IMAGEKIT_URLENDPOINT,
-} = process.env;
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
 const User = require("../models/User");
 
 const GOOGLE_CALLBACK_URL = "http://localhost:3001/api/v1/auth/google/callback";
 
 const imagekit = new ImageKit({
-  publicKey: IMAGEKIT_PUBLICKEY,
-  privateKey: IMAGEKIT_PRIVATEKEY,
-  urlEndpoint: IMAGEKIT_URLENDPOINT,
+  publicKey: "public_1m8F0JkeraCuQxAPWfH6pqRyXHo=",
+  privateKey: "private_kvRV4GSIMCZFIcaVQhxZPHD/loA=",
+  urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
 });
 
 passport.use(
@@ -40,14 +34,14 @@ passport.use(
           const existingUser = await User.findOne({ googleId: profile.id });
 
           if (existingUser && existingUser.image) {
-            console.log(imageUploadResponse,'response 1')
+            console.log(imageUploadResponse, "response 1");
             profileImageURL = existingUser.image;
           } else {
-            // const imageUploadResponse = await imagekit.upload({
-            //   file: photoUrl,
-            //   fileName: `${profile.id}-profile-picture`,
-            // });
-            // profileImageURL = imageUploadResponse.url;
+            const imageUploadResponse = await imagekit.upload({
+              file: photoUrl,
+              fileName: `${profile.id}-profile-picture`,
+            });
+            profileImageURL = imageUploadResponse.url;
           }
         }
 

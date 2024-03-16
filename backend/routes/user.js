@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { getMe, createUser,getAllUsers } = require("../controllers/user");
+const {
+  getMe,
+  createUser,
+  getAllUsers,
+  deleteUser,
+} = require("../controllers/user");
 
 const {
   isAuthorized,
@@ -17,6 +22,10 @@ router
     getAllUsers
   )
   .post(isAuthorized, isActiveUser, authorize("super_admin"), createUser);
+
+router
+  .route("/:id")
+  .delete(isAuthorized, isActiveUser, authorize("super_admin"), deleteUser);
 
 router.get("/me", isAuthorized, isActiveUser, getMe);
 
