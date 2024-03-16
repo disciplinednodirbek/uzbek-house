@@ -148,7 +148,10 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     (req.user.role === "admin" && user.role === "user") ||
     (req.user.role === "user" && req.user.id === user.id)
   ) {
-    console.log(req.body);
+    if (!req.user.role !== "super_admin") {
+      delete req.body.status;
+    }
+
     if (req.body.image) {
       if (user.image) {
         await deleteImageFromImageKit(user.image);
@@ -175,3 +178,4 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     );
   }
 });
+
