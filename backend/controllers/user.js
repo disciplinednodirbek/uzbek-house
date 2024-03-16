@@ -1,4 +1,6 @@
 const { default: mongoose } = require("mongoose");
+const axios = require("axios");
+
 const ImageKit = require("imagekit");
 const User = require("../models/User");
 const asyncHandler = require("../middlewares/async");
@@ -107,15 +109,15 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
 
 const deleteImageFromImageKit = async (imageUrl) => {
   try {
-    const publicId = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-    const deleteResponse = await imagekit.deleteFile(publicId);
-    console.log("Image deleted from ImageKit:", deleteResponse);
+    await imagekit.deleteFile(imageUrl, function (error, result) {
+      if (error) console.log(error);
+      else console.log(result);
+    });
   } catch (error) {
     console.error("Error deleting image from ImageKit:", error);
     throw new Error("Failed to delete image from ImageKit");
   }
 };
-
 // description      Update user
 // route            PUT /api/v1/user/:id
 // access           Private
@@ -178,4 +180,3 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     );
   }
 });
-
