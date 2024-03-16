@@ -36,7 +36,24 @@ exports.createUser = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { name, email, password, role, address, phone_number } = req.body;
+  if (req.body.image) {
+    const imageUploadResponse = await imagekit.upload({
+      file: req.body.image,
+      fileName: `${user._id}-profile-picture`,
+    });
+
+    req.body.image = imageUploadResponse.url;
+  }
+
+  const {
+    name,
+    email,
+    password,
+    role,
+    address,
+    phone_number,
+    image = null,
+  } = req.body;
   const newAdmin = new User({
     name,
     email,
@@ -44,6 +61,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
     role,
     address,
     phone_number,
+    image,
   });
 
   const admin = await newAdmin.save();
