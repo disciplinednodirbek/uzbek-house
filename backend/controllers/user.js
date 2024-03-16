@@ -82,7 +82,10 @@ exports.getAllUsers = asyncHandler(async (req, res, next) => {
   const endIndex = page * limit;
 
   const total = await User.countDocuments();
-  const users = await User.find().skip(startIndex).limit(limit);
+  const users = await User.find()
+    .sort({ createdAt: -1 })
+    .skip(startIndex)
+    .limit(limit);
 
   const pagination = { next: null, prev: null };
 
