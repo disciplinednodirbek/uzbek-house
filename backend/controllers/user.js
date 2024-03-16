@@ -39,7 +39,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
   if (req.body.image) {
     const imageUploadResponse = await imagekit.upload({
       file: req.body.image,
-      fileName: `${user._id}-profile-picture`,
+      fileName: `${existingUser._id}-profile-picture`,
     });
 
     req.body.image = imageUploadResponse.url;
