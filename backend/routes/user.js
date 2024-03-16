@@ -5,6 +5,7 @@ const {
   createUser,
   getAllUsers,
   deleteUser,
+  updateUser,
 } = require("../controllers/user");
 
 const {
@@ -25,6 +26,7 @@ router
 
 router
   .route("/:id")
+  .put(isAuthorized, isActiveUser, updateUser)
   .delete(isAuthorized, isActiveUser, authorize("super_admin"), deleteUser);
 
 router.get("/me", isAuthorized, isActiveUser, getMe);

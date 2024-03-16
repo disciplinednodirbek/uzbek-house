@@ -19,9 +19,17 @@ const UserSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    address: {
+      type: String,
+      required: [true, "Please add your address"],
+    },
+    phone_number: {
+      type: String,
+      required: [true, "Please add your phone_number"],
+    },
     password: {
       type: String,
-      minlength: 5
+      minlength: 5,
     },
     status: {
       type: Boolean,

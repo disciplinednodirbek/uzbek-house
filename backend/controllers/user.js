@@ -1,7 +1,14 @@
 const { default: mongoose } = require("mongoose");
+const ImageKit = require("imagekit");
 const User = require("../models/User");
 const asyncHandler = require("../middlewares/async");
 const ErrorResponse = require("../utils/errorResponse");
+
+const imagekit = new ImageKit({
+  publicKey: "public_1m8F0JkeraCuQxAPWfH6pqRyXHo=",
+  privateKey: "private_kvRV4GSIMCZFIcaVQhxZPHD/loA=",
+  urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
+});
 
 // description    Get me (authenticated user)
 // route         GET /api/v1/users
@@ -27,12 +34,14 @@ exports.createUser = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, address, phone_number } = req.body;
   const newAdmin = new User({
     name,
     email,
     password,
     role,
+    address,
+    phone_number,
   });
 
   const admin = await newAdmin.save();
@@ -92,6 +101,77 @@ exports.deleteUser = asyncHandler(async (req, res, next) => {
     console.error("Error deleting user:", error);
     return next(
       new ErrorResponse(`Error deleting user: ${error.message}`, 500)
+    );
+  }
+});
+
+const deleteImageFromImageKit = async (imageUrl) => {
+  try {
+    const publicId = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+    const deleteResponse = await imagekit.deleteFile(publicId);
+    console.log("Image deleted from ImageKit:", deleteResponse);
+  } catch (error) {
+    console.error("Error deleting image from ImageKit:", error);
+    throw new Error("Failed to delete image from ImageKit");
+  }
+};
+
+// description      Update user
+// route            PUT /api/v1/user/:id
+// access           Private
+exports.updateUser = asyncHandler(async (req, res, next) => {
+  let user = await User.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  if (req.user.role === "user" && req.user.id !== user.id) {
+    return next(
+      new ErrorResponse("You are not authorized to update this user", 403)
+    );
+  }
+
+  if (req.user.role === "admin" && user.role === "super_admin") {
+    return next(
+      new ErrorResponse(
+        "You are not authorized to update super_admin users",
+        403
+      )
+    );
+  }
+
+  if (
+    req.user.role === "super_admin" ||
+    (req.user.role === "admin" && user.role === "user") ||
+    (req.user.role === "user" && req.user.id === user.id)
+  ) {
+    console.log(req.body);
+    if (req.body.image) {
+      if (user.image) {
+        await deleteImageFromImageKit(user.image);
+      }
+
+      const imageUploadResponse = await imagekit.upload({
+        file: req.body.image,
+        fileName: `${user._id}-profile-picture`,
+      });
+
+      req.body.image = imageUploadResponse.url;
+    }
+
+    user = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ success: true, data: user });
+  } else {
+    return next(
+      new ErrorResponse("You are not authorized to update this user", 403)
     );
   }
 });

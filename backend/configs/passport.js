@@ -10,7 +10,7 @@ const User = require("../models/User");
 
 const GOOGLE_CALLBACK_URL = "http://localhost:3001/api/v1/auth/google/callback";
 
-const imagekit = new ImageKit({
+ const imagekit = new ImageKit({
   publicKey: "public_1m8F0JkeraCuQxAPWfH6pqRyXHo=",
   privateKey: "private_kvRV4GSIMCZFIcaVQhxZPHD/loA=",
   urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
