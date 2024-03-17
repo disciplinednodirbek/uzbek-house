@@ -171,7 +171,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
     (req.user.role === "admin" && user.role === "user") ||
     (req.user.role === "user" && req.user.id === user.id)
   ) {
-    if (!req.user.role !== "super_admin") {
+    if (req.user.role !== "super_admin") {
       delete req.body.status;
     }
 
