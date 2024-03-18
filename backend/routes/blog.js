@@ -16,9 +16,10 @@ const router = express.Router();
 const {
   isAuthorized,
   isActiveUser,
+  authorize
 } = require("../middlewares/routeProtect");
 
-router.route("/").get(getBlogs).post(isAuthorized, isActiveUser, createBlog);
+router.route("/").get(getBlogs).post(isAuthorized,authorize('admin','super_admin'), isActiveUser, createBlog);
 
 router.patch("/like/:id", isAuthorized, isActiveUser, likeBlog);
 router.get("/tags", getTags);
