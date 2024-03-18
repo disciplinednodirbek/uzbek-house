@@ -117,16 +117,19 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (req.user.role === "user" && req.user._id !== blog.user._id) {
+  if (
+    req.user._id.toString() !== blog.user.toString() &&
+    req.user.role !== "super_admin"
+  ) {
     return next(
-      new ErrorResponse("You are not authorized to update this user", 403)
+      new ErrorResponse("You are not authorized to update this blog", 403)
     );
   }
 
   if (req.user.role === "admin" && blog.user.role === "super_admin") {
     return next(
       new ErrorResponse(
-        "You are not authorized to update super_admin users",
+        "You are not authorized to update super_admin users' blogs",
         403
       )
     );
@@ -135,7 +138,7 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
   if (
     req.user.role === "super_admin" ||
     (req.user.role === "admin" && blog.user.role === "user") ||
-    (req.user.role === "user" && req.user._id === blog.user._id)
+    req.user._id.toString() === blog.user.toString()
   ) {
     if (req.body.image) {
       if (blog.image) {
@@ -144,17 +147,16 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
 
       const imageUploadResponse = await imagekit.upload({
         file: req.body.image,
-        fileName: `${user._id}-profile-picture`,
+        fileName: `${blog.user._id}-profile-picture`,
       });
 
       req.body.image = imageUploadResponse.url;
     }
 
-    blog = await Blog.findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+    blog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     res.status(200).json({ success: true, data: blog });
   } else {
@@ -163,6 +165,7 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
     );
   }
 });
+
 // description    Delete Blog
 // route          DELETE /api/v1/blogs/:id
 // access         Private
@@ -175,8 +178,10 @@ exports.deleteBlog = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Check if the user is the creator of the blog or a super admin
-  if (blog.user.toString() !== req.user._id && req.user.role !== "super_admin") {
+  if (
+    blog.user.toString() !== req.user._id.toString() &&
+    req.user.role !== "super_admin"
+  ) {
     return next(
       new ErrorResponse(`You are not authorized to delete this blog`, 401)
     );
@@ -184,7 +189,8 @@ exports.deleteBlog = asyncHandler(async (req, res, next) => {
 
   if (
     req.user.role === "super_admin" ||
-    (req.user.role === "admin" && blog.user.toString() === req.user._id)
+    (req.user.role === "admin" &&
+      blog.user.toString() !== req.user._id.toString())
   ) {
     await blog.remove();
 
@@ -227,20 +233,30 @@ exports.likeBlog = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Blog not found`, 404));
   }
 
-  const index = blog.likes.findIndex((id) => id === req.user._id);
+  const index = blog.likes.findIndex((likeId) => likeId === req.user._id);
+
+  let updatedLikes = [];
+  let updatedLikeCount = blog.likeCount;
 
   if (index === -1) {
-    blog.likes.push(req.user._id);
-    blog.likeCount = blog.likeCount + 1;
+    updatedLikes = [...blog.likes, req.user._id];
+    updatedLikeCount++;
   } else {
-    blog.likes = blog.likes.filter((id) => id !== req.user._id);
-    blog.likeCount = blog.likeCount - 1;
+    updatedLikes = blog.likes.filter((likeId) => likeId !== req.user._id);
+    updatedLikeCount--;
   }
 
-  const updatedBlog = await Blog.findByIdAndUpdate(id, blog, {
+  const updatedBlog = {
+    ...blog.toObject(),
+    likes: updatedLikes,
+    likeCount: updatedLikeCount,
+  };
+
+  const updatedBlogResult = await Blog.findByIdAndUpdate(id, updatedBlog, {
     new: true,
   });
-  res.status(201).json({ success: true, data: updatedBlog });
+
+  res.status(200).json({ success: true, data: updatedBlogResult });
 });
 
 // description   Get all trend blogs
