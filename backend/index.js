@@ -20,6 +20,7 @@ const conditionRouter = require("./routes/condition");
 const unitRouter = require("./routes/unit");
 const regionRouter = require("./routes/regions");
 const userRouter = require("./routes/user");
+const blogRouter = require("./routes/blog");
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/blogs", blogRouter);
 app.use("/api/v1/available-times", availableTimeRouter);
 app.use("/api/v1/conditions", conditionRouter);
 app.use("/api/v1/units", unitRouter);
