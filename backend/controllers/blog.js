@@ -71,13 +71,14 @@ exports.createBlog = asyncHandler(async (req, res, next) => {
     req.body.image = imageUploadResponse.url;
   }
 
-  const { description, title, category, image } = req.body;
+  const { description, title, category, image, tags } = req.body;
 
   try {
     const newBlog = new Blog({
       description,
       title,
       category,
+      tags,
       image,
       user: req.user._id,
     });
