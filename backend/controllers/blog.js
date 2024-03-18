@@ -58,7 +58,7 @@ exports.getBlog = asyncHandler(async (req, res, next) => {
 // access        Private
 
 exports.createBlog = asyncHandler(async (req, res, next) => {
-  req.body.user = req.user.id;
+  req.body.user = req.user._id;
 
   if (req.body.image) {
     const imageUploadResponse = await imagekit.upload({
@@ -71,20 +71,26 @@ exports.createBlog = asyncHandler(async (req, res, next) => {
     req.body.image = imageUploadResponse.url;
   }
 
-  const { description, title, category, image = null } = req.body;
-  const newBlog = new User({
-    description,
-    title,
-    category,
-    image,
-  });
+  const { description, title, category, image } = req.body;
 
-  const blog = await newBlog.save();
+  try {
+    const newBlog = new Blog({
+      description,
+      title,
+      category,
+      image,
+      user: req.user._id,
+    });
 
-  res.status(200).json({
-    success: true,
-    data: blog,
-  });
+    const blog = await newBlog.save();
+
+    res.status(200).json({
+      success: true,
+      data: blog,
+    });
+  } catch (error) {
+    return next(new ErrorResponse("Failed to create blog", 500));
+  }
 });
 
 const deleteImageFromImageKit = async (imageUrl) => {
@@ -111,7 +117,7 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (req.user.role === "user" && req.user.id !== blog.user.id) {
+  if (req.user.role === "user" && req.user._id !== blog.user._id) {
     return next(
       new ErrorResponse("You are not authorized to update this user", 403)
     );
@@ -129,7 +135,7 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
   if (
     req.user.role === "super_admin" ||
     (req.user.role === "admin" && blog.user.role === "user") ||
-    (req.user.role === "user" && req.user.id === blog.user.id)
+    (req.user.role === "user" && req.user._id === blog.user._id)
   ) {
     if (req.body.image) {
       if (blog.image) {
@@ -170,7 +176,7 @@ exports.deleteBlog = asyncHandler(async (req, res, next) => {
   }
 
   // Check if the user is the creator of the blog or a super admin
-  if (blog.user.toString() !== req.user.id && req.user.role !== "super_admin") {
+  if (blog.user.toString() !== req.user._id && req.user.role !== "super_admin") {
     return next(
       new ErrorResponse(`You are not authorized to delete this blog`, 401)
     );
@@ -178,7 +184,7 @@ exports.deleteBlog = asyncHandler(async (req, res, next) => {
 
   if (
     req.user.role === "super_admin" ||
-    (req.user.role === "admin" && blog.user.toString() === req.user.id)
+    (req.user.role === "admin" && blog.user.toString() === req.user._id)
   ) {
     await blog.remove();
 
@@ -221,13 +227,13 @@ exports.likeBlog = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Blog not found`, 404));
   }
 
-  const index = blog.likes.findIndex((id) => id === req.user.id);
+  const index = blog.likes.findIndex((id) => id === req.user._id);
 
   if (index === -1) {
-    blog.likes.push(req.user.id);
+    blog.likes.push(req.user._id);
     blog.likeCount = blog.likeCount + 1;
   } else {
-    blog.likes = blog.likes.filter((id) => id !== req.user.id);
+    blog.likes = blog.likes.filter((id) => id !== req.user._id);
     blog.likeCount = blog.likeCount - 1;
   }
 
