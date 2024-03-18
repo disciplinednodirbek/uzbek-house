@@ -170,35 +170,30 @@ exports.updateBlog = asyncHandler(async (req, res, next) => {
 // route          DELETE /api/v1/blogs/:id
 // access         Private
 exports.deleteBlog = asyncHandler(async (req, res, next) => {
-  const blog = await Blog.findById(req.params.id);
+  try {
+    const blog = await Blog.findById(req.params.id);
 
-  if (!blog) {
-    return next(
-      new ErrorResponse(`Blog not found with id of ${req.params.id}`, 404)
-    );
-  }
+    if (!blog) {
+      return next(
+        new ErrorResponse(`Blog not found with id of ${req.params.id}`, 404)
+      );
+    }
 
-  if (
-    blog.user.toString() !== req.user._id.toString() &&
-    req.user.role !== "super_admin"
-  ) {
-    return next(
-      new ErrorResponse(`You are not authorized to delete this blog`, 401)
-    );
-  }
+    if (
+      blog.user.toString() !== req.user._id.toString() &&
+      req.user.role !== "super_admin"
+    ) {
+      return next(
+        new ErrorResponse(`You are not authorized to delete this blog`, 401)
+      );
+    }
 
-  if (
-    req.user.role === "super_admin" ||
-    (req.user.role === "admin" &&
-      blog.user.toString() !== req.user._id.toString())
-  ) {
-    await blog.remove();
+    await Blog.deleteOne({ _id: req.params.id });
 
-    return res.status(200).json({ success: true, data: {} });
-  } else {
-    return next(
-      new ErrorResponse(`You are not authorized to delete this blog`, 401)
-    );
+    res.status(200).json({ success: true, data: {} });
+  } catch (err) {
+    console.error("Error deleting blog:", err);
+    return next(new ErrorResponse(`Error deleting blog: ${err.message}`, 500));
   }
 });
 
@@ -233,30 +228,20 @@ exports.likeBlog = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Blog not found`, 404));
   }
 
-  const index = blog.likes.findIndex((likeId) => likeId === req.user._id);
-
-  let updatedLikes = [];
-  let updatedLikeCount = blog.likeCount;
+  const index = blog.likes.findIndex((id) => id === req.user._id.toString());
 
   if (index === -1) {
-    updatedLikes = [...blog.likes, req.user._id];
-    updatedLikeCount++;
+    blog.likes.push(req.user._id);
+    blog.likeCount = blog.likeCount + 1;
   } else {
-    updatedLikes = blog.likes.filter((likeId) => likeId !== req.user._id);
-    updatedLikeCount--;
+    blog.likes = blog.likes.filter((id) => id !== req.user._id.toString());
+    blog.likeCount = blog.likes.length;
   }
 
-  const updatedBlog = {
-    ...blog.toObject(),
-    likes: updatedLikes,
-    likeCount: updatedLikeCount,
-  };
-
-  const updatedBlogResult = await Blog.findByIdAndUpdate(id, updatedBlog, {
+  const updatedBlog = await Blog.findByIdAndUpdate(id, blog, {
     new: true,
   });
-
-  res.status(200).json({ success: true, data: updatedBlogResult });
+  res.status(201).json({ success: true, data: updatedBlog });
 });
 
 // description   Get all trend blogs
@@ -294,7 +279,7 @@ exports.getTrendBlogs = asyncHandler(async (req, res, next) => {
 // access        Public
 exports.getSuggestedBlogs = asyncHandler(async (req, res, next) => {
   let blogs = await Blog.find({
-    category: mongoose.Types.ObjectId(req.query.category),
+    category: req.query.category,
   })
     .populate("user")
     .sort({ likeCount: -1, createdAt: -1 })
