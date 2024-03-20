@@ -36,6 +36,9 @@ exports.getBlogs = asyncHandler(async (req, res, next) => {
       query = await Blog.find({ tags: { $in: [req.query.tag] } });
     }
   }
+  if (req.query.category) {
+    query = query.where("category").equals(req.query.category);
+  }
 
   const blogs = await query;
 
