@@ -10,7 +10,7 @@ const User = require("../models/User");
 
 const GOOGLE_CALLBACK_URL = "http://localhost:3001/api/v1/auth/google/callback";
 
- const imagekit = new ImageKit({
+const imagekit = new ImageKit({
   publicKey: "public_1m8F0JkeraCuQxAPWfH6pqRyXHo=",
   privateKey: "private_kvRV4GSIMCZFIcaVQhxZPHD/loA=",
   urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
@@ -32,14 +32,18 @@ passport.use(
           const photoUrl = profile.photos[0].value;
 
           const existingUser = await User.findOne({ googleId: profile.id });
+          console.log(existingUser, "existingUser");
+          console.log(profile, "profile");
 
           if (existingUser && existingUser.image) {
-            console.log(imageUploadResponse, "response 1");
+            // console.log(imageUploadResponse, "inside if 1");
             profileImageURL = existingUser.image;
           } else {
             const imageUploadResponse = await imagekit.upload({
               file: photoUrl,
-              fileName: `${profile.id}-profile-picture`,
+              fileName: `${
+                new Date().getSeconds() + new Date().getMilliseconds()
+              }-profile-picture`,
             });
             profileImageURL = imageUploadResponse.url;
           }
