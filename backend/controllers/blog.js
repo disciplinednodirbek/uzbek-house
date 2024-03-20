@@ -14,30 +14,34 @@ const imagekit = new ImageKit({
 // description    Get all blogs
 // route          GET /api/v1/blogs
 // access         Public
+// description    Get all blogs
+// route          GET /api/v1/blogs
+// access         Public
 exports.getBlogs = asyncHandler(async (req, res, next) => {
-    let query;
-  
-    if (Object.keys(req.query).length === 0) {
-      query = Blog.find().populate("user", "name email");
-    } else {
-      const reqQuery = { ...req.query };
-      let queryStr = JSON.stringify(reqQuery);
-      queryStr = queryStr.replace(
-        /\b(gt|gte|lt|lte|in)\b/g,
-        (match) => `$${match}`
-      );
-      query = Blog.find(JSON.parse(queryStr)).populate("user", "name email");
-  
-      if (req.query.category) {
-        query = query.where("category").equals(req.query.category);
-      }
+  let query;
+
+  if (Object.keys(req.query).length === 0) {
+    query = Blog.find().populate("user", "name email");
+  } else {
+    const reqQuery = { ...req.query };
+    let queryStr = JSON.stringify(reqQuery);
+    queryStr = queryStr.replace(
+      /\b(gt|gte|lt|lte|in)\b/g,
+      (match) => `$${match}`
+    );
+
+    query = Blog.find(JSON.parse(queryStr)).populate("user", "name email");
+
+    if (req.query.tag) {
+      query = await Blog.find({ tags: { $in: [req.query.tag] } });
     }
-  
-    const blogs = await query;
-  
-    res.status(200).json({ success: true, count: blogs.length, data: blogs });
-  });
-  
+  }
+
+  const blogs = await query;
+
+  res.status(200).json({ success: true, count: blogs.length, data: blogs });
+});
+
 // description   Get single blog
 // route         GET /api/v1/blogs/:id
 // access        Public
