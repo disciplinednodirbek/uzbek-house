@@ -20,6 +20,7 @@ const conditionRouter = require("./routes/condition");
 const unitRouter = require("./routes/unit");
 const regionRouter = require("./routes/regions");
 const userRouter = require("./routes/user");
+const houseRouter = require("./routes/house");
 const blogRouter = require("./routes/blog");
 
 const app = express();
@@ -67,6 +68,7 @@ app.use("/api/v1/conditions", conditionRouter);
 app.use("/api/v1/units", unitRouter);
 app.use("/api/v1/regions", regionRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/houses", houseRouter);
 
 app.use(errorHandler);
 
