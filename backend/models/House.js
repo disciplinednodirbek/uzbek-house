@@ -49,7 +49,6 @@ const HouseSchema = new mongoose.Schema(
     },
     maintenance_description: {
       type: String,
-      minLength: 30,
       required: [true, "Please add a maintenance description"],
     },
     zip_code: {

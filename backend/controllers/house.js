@@ -149,17 +149,17 @@ exports.updateHouse = asyncHandler(async (req, res, next) => {
     (req.user.role === "admin" && house.user.role === "user") ||
     req.user._id.toString() === house.user.toString()
   ) {
-    if (req.body.image && Array.isArray(req.body.image)) {
-      // Upload new images and update house's image field
+    if (req.body.imageList && Array.isArray(req.body.imageList)) {
+      // Upload new imageLists and update house's imageList field
       const uploadedImageUrls = [];
-      for (let i = 0; i < req.body.image.length; i++) {
+      for (let i = 0; i < req.body.imageList.length; i++) {
         const imageUploadResponse = await imagekit.upload({
-          file: req.body.image[i],
+          file: req.body.imageList[i],
           fileName: `house-${req.params.id}-image-${i + 1}`,
         });
         uploadedImageUrls.push(imageUploadResponse.url);
       }
-      req.body.image = uploadedImageUrls;
+      req.body.imageList = uploadedImageUrls;
     }
 
     house = await House.findByIdAndUpdate(req.params.id, req.body, {
