@@ -88,6 +88,11 @@ const HouseSchema = new mongoose.Schema(
       ref: "Region",
       required: [true, "Please add region ID"],
     },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Please add user"],
+    },
     current_condition: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Condition",
