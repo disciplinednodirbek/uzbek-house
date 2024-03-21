@@ -24,7 +24,11 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
   const houses = await House.find()
     .sort({ createdAt: -1 })
     .skip(startIndex)
-    .limit(limit);
+    .limit(limit)
+    .populate("region_id")
+    .populate("current_condition")
+    .populate("unit_type")
+    .populate("available_time");
 
   const pagination = { next: null, prev: null };
 
@@ -49,7 +53,11 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
 // route         GET /api/v1/houses/:id
 // access        Public
 exports.getHouse = asyncHandler(async (req, res, next) => {
-  const house = await House.findById(req.params.id);
+  const house = await House.findById(req.params.id)
+    .populate("region_id")
+    .populate("current_condition")
+    .populate("unit_type")
+    .populate("available_time");
 
   if (!house) {
     return next(
@@ -64,26 +72,34 @@ exports.getHouse = asyncHandler(async (req, res, next) => {
 // route         POST /api/v1/houses
 // access        Private
 exports.createHouse = asyncHandler(async (req, res, next) => {
-  if (!Array.isArray(req.body.image)) {
-    return next(new ErrorResponse("Images must be provided as an array", 400));
+  if (!req.body.location || !Array.isArray(req.body.location)) {
+    return next(
+      new ErrorResponse("Location must be provided as an array", 400)
+    );
   }
 
-  const uploadedImageUrls = [];
+  const location = {
+    type: "Point",
+    coordinates: req.body.location,
+  };
+
+  delete req.body.location;
 
   try {
-    for (let i = 0; i < req.body.image.length; i++) {
+    const uploadedImageUrls = [];
+    for (let i = 0; i < req.body.imageList.length; i++) {
       const imageUploadResponse = await imagekit.upload({
-        file: req.body.image[i],
+        file: req.body.imageList[i],
         fileName: `house-${Date.now()}-${i + 1}`,
       });
-
       uploadedImageUrls.push(imageUploadResponse.url);
     }
 
     const newHouse = new House({
       ...req.body,
+      location,
       user: req.user._id,
-      image: uploadedImageUrls,
+      imageList: uploadedImageUrls,
     });
 
     const house = await newHouse.save();
@@ -93,84 +109,71 @@ exports.createHouse = asyncHandler(async (req, res, next) => {
       data: house,
     });
   } catch (error) {
+    console.error("Error creating house:", error);
     return next(new ErrorResponse("Failed to create house", 500));
   }
 });
-
-const deleteImageFromImageKit = async (imageUrl) => {
-  try {
-    await imagekit.deleteFile(imageUrl, function (error, result) {
-      if (error) console.log(error);
-      else console.log(result);
-    });
-  } catch (error) {
-    console.error("Error deleting image from ImageKit:", error);
-    throw new Error("Failed to delete image from ImageKit");
-  }
-};
-
 
 // description   Update house
 // route         PUT /api/v1/houses/:id
 // access        Private
 exports.updateHouse = asyncHandler(async (req, res, next) => {
-    let house = await House.findById(req.params.id);
-  
-    if (!house) {
-      return next(
-        new ErrorResponse(`House not found with id of ${req.params.id}`, 404)
-      );
-    }
-  
-    if (
-      req.user._id.toString() !== house.user.toString() &&
-      req.user.role !== "super_admin"
-    ) {
-      return next(
-        new ErrorResponse("You are not authorized to update this house", 403)
-      );
-    }
-  
-    if (req.user.role === "admin" && house.user.role === "super_admin") {
-      return next(
-        new ErrorResponse(
-          "You are not authorized to update super_admin users' houses",
-          403
-        )
-      );
-    }
-  
-    if (
-      req.user.role === "super_admin" ||
-      (req.user.role === "admin" && house.user.role === "user") ||
-      req.user._id.toString() === house.user.toString()
-    ) {
-      if (req.body.image && Array.isArray(req.body.image)) {
-        // Upload new images and update house's image field
-        const uploadedImageUrls = [];
-        for (let i = 0; i < req.body.image.length; i++) {
-          const imageUploadResponse = await imagekit.upload({
-            file: req.body.image[i],
-            fileName: `house-${req.params.id}-image-${i + 1}`,
-          });
-          uploadedImageUrls.push(imageUploadResponse.url);
-        }
-        req.body.image = uploadedImageUrls;
+  let house = await House.findById(req.params.id);
+
+  if (!house) {
+    return next(
+      new ErrorResponse(`House not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  if (
+    req.user._id.toString() !== house.user.toString() &&
+    req.user.role !== "super_admin"
+  ) {
+    return next(
+      new ErrorResponse("You are not authorized to update this house", 403)
+    );
+  }
+
+  if (req.user.role === "admin" && house.user.role === "super_admin") {
+    return next(
+      new ErrorResponse(
+        "You are not authorized to update super_admin users' houses",
+        403
+      )
+    );
+  }
+
+  if (
+    req.user.role === "super_admin" ||
+    (req.user.role === "admin" && house.user.role === "user") ||
+    req.user._id.toString() === house.user.toString()
+  ) {
+    if (req.body.image && Array.isArray(req.body.image)) {
+      // Upload new images and update house's image field
+      const uploadedImageUrls = [];
+      for (let i = 0; i < req.body.image.length; i++) {
+        const imageUploadResponse = await imagekit.upload({
+          file: req.body.image[i],
+          fileName: `house-${req.params.id}-image-${i + 1}`,
+        });
+        uploadedImageUrls.push(imageUploadResponse.url);
       }
-  
-      house = await House.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-      });
-  
-      res.status(200).json({ success: true, data: house });
-    } else {
-      return next(
-        new ErrorResponse("You are not authorized to update this house", 403)
-      );
+      req.body.image = uploadedImageUrls;
     }
-  });
-  
+
+    house = await House.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({ success: true, data: house });
+  } else {
+    return next(
+      new ErrorResponse("You are not authorized to update this house", 403)
+    );
+  }
+});
 
 // description    Delete house
 // route          DELETE /api/v1/houses/:id
@@ -203,8 +206,6 @@ exports.deleteHouse = asyncHandler(async (req, res, next) => {
   }
 });
 
-
-
 // description   like functionality for each house
 // route         GET /api/v1/houses/like/:id
 // access        Private
@@ -232,7 +233,6 @@ exports.likeHouse = asyncHandler(async (req, res, next) => {
   });
   res.status(201).json({ success: true, data: updatedHouse });
 });
-
 
 // description   Get most relevant category  houses
 // route         GET /api/v1/houses/:houseId/suggested/category=..?

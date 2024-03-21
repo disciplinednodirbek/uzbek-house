@@ -64,6 +64,10 @@ const HouseSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    type: {
+      type: String,
+      required: [true, "Please add type"],
+    },
     comments: {
       type: [
         {
