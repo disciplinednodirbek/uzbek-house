@@ -11,17 +11,35 @@ const imagekit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
 });
 
-// description    Get all houses
-// route         GET /api/v1/houses
-// access       Public
 exports.getAllHouses = asyncHandler(async (req, res, next) => {
+  const { address, type, min_price, max_price, balcony } = req.query;
+  let query = {};
+  if (address) {
+    query.address = { $regex: new RegExp(address, "i") }; 
+  }
+
+  if (type) {
+    query.type = type;
+  }
+
+  if (min_price) {
+    query.price = { $gte: min_price }; 
+  }
+  if (max_price) {
+    query.price = { ...query.price, $lte: max_price }; 
+  }
+
+  if (balcony !== undefined) {
+    query.balcony = balcony;
+  }
+
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
-  const total = await House.countDocuments();
-  const houses = await House.find()
+  const total = await House.countDocuments(query);
+  const houses = await House.find(query)
     .sort({ createdAt: -1 })
     .skip(startIndex)
     .limit(limit)
@@ -48,6 +66,7 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
     data: houses,
   });
 });
+
 
 // description   Get single house
 // route         GET /api/v1/houses/:id
