@@ -85,7 +85,7 @@ exports.getHouse = asyncHandler(async (req, res, next) => {
     .populate("available_time")
     .populate({
       path: "user",
-      select: "name email phone_number address",
+      select: "name email phone_number address image",
     });
 
   if (!house) {
