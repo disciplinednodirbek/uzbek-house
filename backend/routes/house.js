@@ -8,6 +8,7 @@ const {
   likeHouse,
   hideHouse,
   getSuggestedHouses,
+  getTrendHouses
 } = require("../controllers/house");
 
 const router = express.Router();
@@ -22,6 +23,8 @@ router
 router.patch("/like/:id", isAuthorized, isActiveUser, likeHouse);
 router.patch("/hide/:id", isAuthorized, isActiveUser, hideHouse);
 router.get("/:houseId/suggested", getSuggestedHouses);
+router.get("/trend", getTrendHouses);
+
 
 router
   .route("/:id")

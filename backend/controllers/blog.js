@@ -259,7 +259,10 @@ exports.getTrendBlogs = asyncHandler(async (req, res, next) => {
   let query;
 
   if (Object.keys(req.query).length === 0) {
-    query = Blog.find();
+    query = Blog.find()
+      .populate("user")
+      .sort({ likeCount: -1, createdAt: -1 })
+      .limit(4);
   } else {
     const reqQuery = { ...req.query };
     let queryStr = JSON.stringify(reqQuery);

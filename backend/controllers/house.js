@@ -300,3 +300,19 @@ exports.getSuggestedHouses = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({ success: true, data: houses });
 });
+
+// description   Get all trend houses
+// route         GET /api/v1/houses/trend/
+// access        Public
+exports.getTrendHouses = asyncHandler(async (req, res, next) => {
+  const houses = House.find()
+    .populate("user")
+    .sort({ likeCount: -1, createdAt: -1 })
+    .limit(5);
+
+  const foundHouses = await houses;
+
+  res
+    .status(200)
+    .json({ success: true, count: foundHouses.length, data: foundHouses });
+});
