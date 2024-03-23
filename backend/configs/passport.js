@@ -85,6 +85,7 @@ passport.use(
       let newUser = {
         email,
         password,
+        region_id,
         name,
       };
 
