@@ -15,6 +15,10 @@ const HouseSchema = new mongoose.Schema(
         "Please add a valid email",
       ],
     },
+    year_build: {
+      type: Number,
+      required: [true, "Please add year build"],
+    },
     bathroom_count: {
       type: Number,
       required: [true, "Please add bathroom count"],
@@ -30,6 +34,10 @@ const HouseSchema = new mongoose.Schema(
     kitchen_count: {
       type: Number,
       required: [true, "Please add kitchen count"],
+    },
+    hiddenFor: {
+      type: [String],
+      default: [],
     },
     square_yard: {
       type: Number,

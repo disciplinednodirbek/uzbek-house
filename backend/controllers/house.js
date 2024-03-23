@@ -12,10 +12,11 @@ const imagekit = new ImageKit({
 });
 
 exports.getAllHouses = asyncHandler(async (req, res, next) => {
+  console.log(req.query);
   const { address, type, min_price, max_price, balcony } = req.query;
   let query = {};
   if (address) {
-    query.address = { $regex: new RegExp(address, "i") }; 
+    query.address = { $regex: new RegExp(address, "i") };
   }
 
   if (type) {
@@ -23,10 +24,10 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
   }
 
   if (min_price) {
-    query.price = { $gte: min_price }; 
+    query.price = { $gte: min_price };
   }
   if (max_price) {
-    query.price = { ...query.price, $lte: max_price }; 
+    query.price = { ...query.price, $lte: max_price };
   }
 
   if (balcony !== undefined) {
@@ -39,7 +40,7 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
   const endIndex = page * limit;
 
   const total = await House.countDocuments(query);
-  const houses = await House.find(query)
+  let houses = await House.find(query)
     .sort({ createdAt: -1 })
     .skip(startIndex)
     .limit(limit)
@@ -47,6 +48,12 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
     .populate("current_condition")
     .populate("unit_type")
     .populate("available_time");
+
+  if (req.user && req.user._id.toString()) {
+    houses = houses.filter(
+      (house) => !house.hiddenFor.includes(req.user._id.toString())
+    );
+  }
 
   const pagination = { next: null, prev: null };
 
@@ -67,7 +74,6 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
   });
 });
 
-
 // description   Get single house
 // route         GET /api/v1/houses/:id
 // access        Public
@@ -76,7 +82,8 @@ exports.getHouse = asyncHandler(async (req, res, next) => {
     .populate("region_id")
     .populate("current_condition")
     .populate("unit_type")
-    .populate("available_time");
+    .populate("available_time")
+    .populate("user");
 
   if (!house) {
     return next(
@@ -225,9 +232,27 @@ exports.deleteHouse = asyncHandler(async (req, res, next) => {
   }
 });
 
-// description   like functionality for each house
-// route         GET /api/v1/houses/like/:id
+// description   hide functionality for each house
+// route         GET /api/v1/houses/hide/:id
 // access        Private
+exports.hideHouse = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+
+  const house = await House.findById(id);
+
+  if (!house) {
+    return next(new ErrorResponse(`house not found`, 404));
+  }
+
+  if (house.hiddenFor.includes(req.user._id.toString())) {
+    return next(new ErrorResponse(`already hidden for you`, 403));
+  }
+
+  house.hiddenFor.push(req.user._id.toString());
+  const updatedHouse = await house.save();
+  res.status(201).json({ success: true, data: updatedHouse });
+});
+
 exports.likeHouse = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
