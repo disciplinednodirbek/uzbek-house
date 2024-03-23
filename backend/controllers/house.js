@@ -13,7 +13,7 @@ const imagekit = new ImageKit({
 
 exports.getAllHouses = asyncHandler(async (req, res, next) => {
   console.log(req.query);
-  const { address, type, min_price, max_price, balcony } = req.query;
+  const { address, type, min_price, max_price, balcony,region_id } = req.query;
   let query = {};
   if (address) {
     query.address = { $regex: new RegExp(address, "i") };
@@ -21,6 +21,9 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
 
   if (type) {
     query.type = type;
+  }
+  if(region_id){
+    query.region_id = region_id
   }
 
   if (min_price) {
