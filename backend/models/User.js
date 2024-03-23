@@ -21,12 +21,10 @@ const UserSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      required: [true, "Please add your address"],
       default:'',
     },
     phone_number: {
       type: String,
-      required: [true, "Please add your phone_number"],
       default:'',
     },
     password: {
