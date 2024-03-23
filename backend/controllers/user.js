@@ -47,6 +47,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 
   const {
     name,
+    region_id,
     email,
     password,
     role,
@@ -59,6 +60,7 @@ exports.createUser = asyncHandler(async (req, res, next) => {
     email,
     password,
     role,
+    region_id,
     address,
     phone_number,
     image,

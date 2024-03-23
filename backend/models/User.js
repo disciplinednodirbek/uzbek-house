@@ -21,11 +21,15 @@ const UserSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      default:'',
+      default: "",
+    },
+    region_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Region",
     },
     phone_number: {
       type: String,
-      default:'',
+      default: "",
     },
     password: {
       type: String,

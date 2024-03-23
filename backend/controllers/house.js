@@ -281,22 +281,19 @@ exports.likeHouse = asyncHandler(async (req, res, next) => {
   res.status(201).json({ success: true, data: updatedHouse });
 });
 
-// description   Get most relevant category  houses
-// route         GET /api/v1/houses/:houseId/suggested/category=..?
+// description   Get most relevant   houses
+// route         GET /api/v1/houses/suggested/by_region/
 // access        Public
 exports.getSuggestedHouses = asyncHandler(async (req, res, next) => {
-  let houses = await House.find({
-    category: req.query.category,
-  })
-    .populate("user")
-    .sort({ likeCount: -1, createdAt: -1 })
-    .limit(4);
-
-  if (!houses) {
-    return next(new ErrorResponse(`houses not found`, 404));
+  if (!req.user) {
+    res.status(200).json({ success: true, data: [] });
   }
 
-  houses = houses.filter((house) => house.id.toString() !== req.params.houseId);
+  let houses = await House.find({
+    region_id: req.user.region_id,
+  })
+    .sort({ likeCount: -1, createdAt: -1 })
+    .limit(10);
 
   res.status(200).json({ success: true, data: houses });
 });
