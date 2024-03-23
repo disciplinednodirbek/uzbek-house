@@ -305,7 +305,7 @@ exports.getTrendHouses = asyncHandler(async (req, res, next) => {
   const houses = House.find()
     .populate("user")
     .sort({ likeCount: -1, createdAt: -1 })
-    .limit(5);
+    .limit(10);
 
   const foundHouses = await houses;
 
