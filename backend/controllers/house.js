@@ -13,7 +13,7 @@ const imagekit = new ImageKit({
 
 exports.getAllHouses = asyncHandler(async (req, res, next) => {
   console.log(req.query);
-  const { address, type, min_price, max_price, balcony,region_id } = req.query;
+  const { address, type, min_price, max_price, balcony, region_id } = req.query;
   let query = {};
   if (address) {
     query.address = { $regex: new RegExp(address, "i") };
@@ -22,8 +22,8 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
   if (type) {
     query.type = type;
   }
-  if(region_id){
-    query.region_id = region_id
+  if (region_id) {
+    query.region_id = region_id;
   }
 
   if (min_price) {
@@ -204,6 +204,28 @@ exports.updateHouse = asyncHandler(async (req, res, next) => {
     return next(
       new ErrorResponse("You are not authorized to update this house", 403)
     );
+  }
+});
+// description    Get own houses
+// route          GET /api/v1/houses/me
+// access         Private
+exports.getOwnHouses = asyncHandler(async (req, res, next) => {
+  try {
+    // Find all houses owned by the user
+    const houses = await House.find({ user: req.user._id.toString() })
+      .populate("region_id")
+      .populate("current_condition")
+      .populate("unit_type")
+      .populate("available_time");
+
+    if (!houses || houses.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    res.status(200).json({ success: true, data: houses });
+  } catch (err) {
+    console.error("Error getting houses:", err);
+    return next(new ErrorResponse(`Error getting houses: ${err.message}`, 500));
   }
 });
 

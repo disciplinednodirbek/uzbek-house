@@ -7,6 +7,7 @@ const {
   updateHouse,
   likeHouse,
   hideHouse,
+  getOwnHouses,
   getSuggestedHouses,
   getTrendHouses,
 } = require("../controllers/house");
@@ -19,6 +20,8 @@ router
   .route("/")
   .get(getAllHouses)
   .post(isAuthorized, isActiveUser, createHouse);
+
+router.route("/me").get(isAuthorized, isActiveUser, getOwnHouses);
 
 router.patch("/like/:id", isAuthorized, isActiveUser, likeHouse);
 router.patch("/hide/:id", isAuthorized, isActiveUser, hideHouse);
