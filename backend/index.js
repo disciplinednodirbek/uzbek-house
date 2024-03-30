@@ -9,7 +9,6 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const Blog = require("./models/Blog");
 const User = require("./models/User");
 
-
 const connectToDatabase = require("./configs/database");
 const errorHandler = require("./middlewares/error");
 require("./configs/passport");
@@ -112,29 +111,30 @@ io.on("connection", (socket) => {
         .populate("comments.user")
         .select("comments");
 
-      socket.emit("getAllComments_result", updatedComments.comments);
+      socket.emit("getAllComments_result", updatedComments.comments || []);
     } catch (error) {
       console.error("Error in send_comment:", error);
       socket.emit("send_comment_result", false);
     }
   });
 
-  socket.on("getAllComments", async ({ blogId }) => {
+  socket.on("getAllComments_result", async ({ blogId }) => {
     try {
       await socket.join(blogId);
-      const blog = await Blog.findById(blogId)
-        .populate("comments.user")
-        .select("comments");
+      const blog =
+        (await Blog.findById(blogId)
+          .populate("comments.user")
+          .select("comments")) || [];
 
       if (!blog) {
-        socket.emit("getAllComments_result", null);
+        socket.emit("getAllComments_result", []);
         return;
       }
 
-      socket.emit("getAllComments_result", blog);
+      socket.emit("getAllComments_result", blog.comments);
     } catch (error) {
       console.error("Error in getAllComments:", error);
-      socket.emit("getAllComments_result", null);
+      socket.emit("getAllComments_result", []);
     }
   });
 });
