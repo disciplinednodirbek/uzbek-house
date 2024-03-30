@@ -50,7 +50,7 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
     .populate("region_id")
     .populate("current_condition")
     .populate("unit_type")
-    .populate("available_time");
+    .populate("available_time").populate("user");
 
   if (req.user && req.user._id.toString()) {
     houses = houses.filter(
