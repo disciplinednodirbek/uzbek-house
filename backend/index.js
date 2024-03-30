@@ -113,8 +113,7 @@ io.on("connection", (socket) => {
         .select("comments");
 
       io.to(blogId).emit("updateComments", updatedComments);
-      socket.emit("send_comment_result", true);
-      socket.emit("getAllComments_result", blog);
+      socket.emit("getAllComments_result", blog.select("comments"));
     } catch (error) {
       console.error("Error in send_comment:", error);
       socket.emit("send_comment_result", false);
