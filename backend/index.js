@@ -7,6 +7,8 @@ const passport = require("passport");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const Blog = require("./models/Blog");
+const User = require("./models/User");
+
 
 const connectToDatabase = require("./configs/database");
 const errorHandler = require("./middlewares/error");
