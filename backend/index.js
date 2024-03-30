@@ -112,7 +112,7 @@ io.on("connection", (socket) => {
         .populate("comments.user")
         .select("comments");
 
-      socket.emit("getAllComments_result", updatedComments);
+      socket.emit("getAllComments_result", updatedComments.comments);
     } catch (error) {
       console.error("Error in send_comment:", error);
       socket.emit("send_comment_result", false);
