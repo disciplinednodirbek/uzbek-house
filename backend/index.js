@@ -82,14 +82,13 @@ const server = app.listen(
     `Server running  ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
   )
 );
-
 let io = require("./socket").init(server);
 
 io.on("connection", (socket) => {
-  socket.io = io;
-  console.log("Client connected");
+ socket.io = io;
+ console.log("Client connected");
 
-  socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
+ socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
     try {
       const [blog, user] = await Promise.all([
         Blog.findById(blogId).populate("comments.user").select("comments"),
@@ -111,14 +110,15 @@ io.on("connection", (socket) => {
         .populate("comments.user")
         .select("comments");
 
-      socket.emit("getAllComments_result", updatedComments.comments || []);
+      // Use socket.broadcast.emit to send the message to all clients except the sender
+      socket.broadcast.emit("getAllComments_result", updatedComments.comments || []);
     } catch (error) {
       console.error("Error in send_comment:", error);
       socket.emit("send_comment_result", false);
     }
-  });
+ });
 
-  socket.on("getAllComments_result", async ({ blogId }) => {
+ socket.on("getAllComments_result", async ({ blogId }) => {
     try {
       await socket.join(blogId);
       const blog =
@@ -136,8 +136,9 @@ io.on("connection", (socket) => {
       console.error("Error in getAllComments:", error);
       socket.emit("getAllComments_result", []);
     }
-  });
+ });
 });
+
 
 // let io = require("./socket").init(server);
 // io.on("connection", (socket) => {
