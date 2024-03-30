@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.emit("getAllComments_result", async ({ blogId }) => {
+  socket.on("getAllComments_result", async ({ blogId }) => {
     try {
       await socket.join(blogId);
       const blog =
