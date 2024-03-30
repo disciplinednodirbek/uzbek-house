@@ -6,6 +6,7 @@ const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const Blog = require("./models/Blog");
 
 const connectToDatabase = require("./configs/database");
 const errorHandler = require("./middlewares/error");
@@ -37,7 +38,6 @@ app.use(
     credentials: true,
   })
 );
-
 
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI,
@@ -75,9 +75,107 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(
+const server = app.listen(
   PORT,
   console.log(
     `Server running  ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
   )
 );
+
+let io = require("./socket").init(server);
+
+io.on("connection", (socket) => {
+  socket.io = io;
+  console.log("Client connected");
+
+  socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
+    try {
+      const [blog, user] = await Promise.all([
+        Blog.findById(blogId).populate("comments.user").select("comments"),
+        User.findById(currentUserId),
+      ]);
+
+      if (!blog || !user) {
+        socket.emit("send_comment_result", false);
+        return;
+      }
+
+      blog.comments.push({
+        user: currentUserId,
+        text,
+      });
+
+      await blog.save();
+      const updatedComments = await Blog.findById(blogId)
+        .populate("comments.user")
+        .select("comments");
+
+      io.to(blogId).emit("updateComments", updatedComments);
+      socket.emit("send_comment_result", true);
+    } catch (error) {
+      console.error("Error in send_comment:", error);
+      socket.emit("send_comment_result", false);
+    }
+  });
+
+  socket.on("getAllComments", async ({ blogId }) => {
+    try {
+      await socket.join(blogId);
+      const blog = await Blog.findById(blogId)
+        .populate("comments.user")
+        .select("comments");
+
+      if (!blog) {
+        socket.emit("getAllComments_result", null);
+        return;
+      }
+
+      socket.emit("getAllComments_result", blog);
+    } catch (error) {
+      console.error("Error in getAllComments:", error);
+      socket.emit("getAllComments_result", null);
+    }
+  });
+});
+
+// let io = require("./socket").init(server);
+// io.on("connection", (socket) => {
+//   socket.io = io;
+//   console.log("Client connected");
+
+//   socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
+//     const blog = await Blog.findById(blogId)
+//       .populate("comments.user")
+//       .select("comments");
+
+//     const user = await User.findById(currentUserId);
+
+//     if (!blog || !user) {
+//       return socket.emit("send_comment_result", false);
+//     }
+
+//     blog.comments.push({
+//       user: currentUserId,
+//       text,
+//     });
+
+//     await blog.save();
+//     const updated = await Blog.findById(blogId)
+//       .populate("comments.user")
+//       .select("comments");
+//     socket.nsp.to(blogId).emit("updateComments", updated);
+//     return socket.emit("send_comment_result", true);
+//   });
+
+//   socket.on("getAllComments", async ({ blogId }) => {
+//     await socket.join(blogId);
+//     const blog = await Blog.findById(blogId)
+//       .populate("comments.user")
+//       .select("comments");
+//     if (!blog) {
+//       return socket.emit("getAllComments_result", null);
+//     }
+
+//     return socket.nsp.to(blogId).emit("getAllComments_result", blog);
+//   });
+// });
