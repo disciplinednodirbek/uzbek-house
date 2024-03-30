@@ -8,6 +8,7 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const Blog = require("./models/Blog");
 const User = require("./models/User");
+const House = require("./models/House");
 
 const connectToDatabase = require("./configs/database");
 const errorHandler = require("./middlewares/error");
@@ -86,10 +87,10 @@ const server = app.listen(
 let io = require("./socket").init(server);
 
 io.on("connection", (socket) => {
- socket.io = io;
- console.log("Client connected");
+  socket.io = io;
+  console.log("Client connected");
 
- socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
+  socket.on("send_comment", async ({ text, blogId, currentUserId }) => {
     try {
       const [blog, user] = await Promise.all([
         Blog.findById(blogId).populate("comments.user").select("comments"),
@@ -114,14 +115,17 @@ io.on("connection", (socket) => {
       // Emit the message to the sender
       socket.emit("getAllComments_result", updatedComments.comments || []);
       // Broadcast the message to all other users
-      socket.broadcast.emit("getAllComments_result", updatedComments.comments || []);
+      socket.broadcast.emit(
+        "getAllComments_result",
+        updatedComments.comments || []
+      );
     } catch (error) {
       console.error("Error in send_comment:", error);
       socket.emit("send_comment_result", false);
     }
- });
+  });
 
- socket.on("getAllComments_result", async ({ blogId }) => {
+  socket.on("getAllComments_result", async ({ blogId }) => {
     try {
       await socket.join(blogId);
       const blog =
@@ -139,12 +143,66 @@ io.on("connection", (socket) => {
       console.error("Error in getAllComments:", error);
       socket.emit("getAllComments_result", []);
     }
- });
+  });
+
+  socket.on("send_comment_house", async ({ text, houseId, currentUserId }) => {
+    try {
+      const [house, user] = await Promise.all([
+        House.findById(houseId).populate("comments.user").select("comments"),
+        User.findById(currentUserId),
+      ]);
+
+      if (!house || !user) {
+        socket.emit("send_comment_house_result", false);
+        return;
+      }
+
+      house.comments.push({
+        user: currentUserId,
+        text,
+      });
+
+      await house.save();
+      const updatedComments = await House.findById(houseId)
+        .populate("comments.user")
+        .select("comments");
+
+      // Emit the message to the sender
+      socket.emit(
+        "getAllComments_house_result",
+        updatedComments.comments || []
+      );
+      // Broadcast the message to all other users
+      socket.broadcast.emit(
+        "getAllComments_house_result",
+        updatedComments.comments || []
+      );
+    } catch (error) {
+      console.error("Error in send_comment_house:", error);
+      socket.emit("send_comment_house_result", false);
+    }
+  });
+
+  socket.on("getAllComments_house_result", async ({ houseId }) => {
+    try {
+      await socket.join(houseId);
+      const house =
+        (await House.findById(houseId)
+          .populate("comments.user")
+          .select("comments")) || [];
+
+      if (!house) {
+        socket.emit("getAllComments_house_result", []);
+        return;
+      }
+
+      socket.emit("getAllComments_house_result", house.comments);
+    } catch (error) {
+      console.error("Error in getAllComments:", error);
+      socket.emit("getAllComments_house_result", []);
+    }
+  });
 });
-
-
-
-
 
 // let io = require("./socket").init(server);
 // io.on("connection", (socket) => {
