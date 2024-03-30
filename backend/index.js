@@ -82,6 +82,7 @@ const server = app.listen(
     `Server running  ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
   )
 );
+
 let io = require("./socket").init(server);
 
 io.on("connection", (socket) => {
@@ -110,7 +111,9 @@ io.on("connection", (socket) => {
         .populate("comments.user")
         .select("comments");
 
-      // Use socket.broadcast.emit to send the message to all clients except the sender
+      // Emit the message to the sender
+      socket.emit("getAllComments_result", updatedComments.comments || []);
+      // Broadcast the message to all other users
       socket.broadcast.emit("getAllComments_result", updatedComments.comments || []);
     } catch (error) {
       console.error("Error in send_comment:", error);
@@ -138,6 +141,9 @@ io.on("connection", (socket) => {
     }
  });
 });
+
+
+
 
 
 // let io = require("./socket").init(server);
