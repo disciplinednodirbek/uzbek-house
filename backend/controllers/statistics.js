@@ -2,7 +2,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/async");
 const House = require("../models/House");
 const Region = require("../models/Region");
-const User = require("../models/Region");
+const User = require("../models/User");
 
 exports.getHousesByMonth = asyncHandler(async (req, res, next) => {
   const housesByMonth = await House.aggregate([
