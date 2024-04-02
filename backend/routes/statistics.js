@@ -4,6 +4,7 @@ const {
   getHousesByMonth,
   getHousesTotalCount,
   getHousesByRegion,
+  getUsersByRegion
 } = require("../controllers/statistics");
 
 const { isAuthorized, authorize } = require("../middlewares/routeProtect");
@@ -18,5 +19,9 @@ router
 router
   .route("/houses/by-region")
   .get(isAuthorized, authorize("super_admin", "admin"), getHousesByRegion);
+
+  router
+  .route("/users/by-region")
+  .get(isAuthorized, authorize("super_admin", "admin"), getUsersByRegion);
 
 module.exports = router;
