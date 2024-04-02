@@ -25,6 +25,8 @@ const regionRouter = require("./routes/regions");
 const userRouter = require("./routes/user");
 const houseRouter = require("./routes/house");
 const blogRouter = require("./routes/blog");
+const statisticsRouter = require("./routes/statistics");
+
 
 const app = express();
 
@@ -72,7 +74,7 @@ app.use("/api/v1/units", unitRouter);
 app.use("/api/v1/regions", regionRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/houses", houseRouter);
-
+app.use('/api/v1/statistics',statisticsRouter)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
