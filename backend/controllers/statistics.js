@@ -1,6 +1,8 @@
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middlewares/async");
 const House = require("../models/House");
+const Region = require("../models/Region");
+
 
 exports.getHousesByMonth = asyncHandler(async (req, res, next) => {
   const housesByMonth = await House.aggregate([
@@ -80,26 +82,26 @@ exports.getHousesTotalCount = asyncHandler(async (req, res, next) => {
 });
 
 exports.getHousesByRegion = asyncHandler(async (req, res, next) => {
-  // Get distinct regions from the House collection
-  const regions = await House.distinct("region_id");
+    // Get distinct regions from the House collection
+    const regions = await House.distinct("region_id");
 
-  // Initialize an array to store counts of houses for each region
-  const houseCountsByRegion = [];
+    // Initialize arrays to store regions and house counts
+    const regionsArray = [];
+    const houseCountsArray = [];
 
-  // Loop through each region and find the count of houses belonging to that region
-  for (const regionId of regions) {
-    // Populate the region name from the Region collection
-    const region = await Region.findById(regionId);
-    const regionName = region ? region.name : "Unknown";
+    // Loop through each region and find the count of houses belonging to that region
+    for (const regionId of regions) {
+        // Populate the region name from the Region collection
+        const region = await Region.findById(regionId);
+        const regionName = region ? region.name : "Unknown";
 
-    // Find the count of houses belonging to the current region
-    const houseCount = await House.countDocuments({ region_id: regionId });
+        // Find the count of houses belonging to the current region
+        const houseCount = await House.countDocuments({ region_id: regionId });
 
-    houseCountsByRegion.push({
-      region: regionName,
-      houseCount: houseCount,
-    });
-  }
+        // Push region name and house count to their respective arrays
+        regionsArray.push(regionName);
+        houseCountsArray.push(houseCount);
+    }
 
-  res.status(200).json({ success: true, houseCountsByRegion });
+    res.status(200).json({ success: true, regions: regionsArray, houses: houseCountsArray });
 });
