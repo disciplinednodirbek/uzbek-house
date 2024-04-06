@@ -10,11 +10,16 @@ const {
   getOwnHouses,
   getSuggestedHouses,
   getTrendHouses,
+  blockHouse,
 } = require("../controllers/house");
 
 const router = express.Router();
 
-const { isAuthorized, isActiveUser } = require("../middlewares/routeProtect");
+const {
+  isAuthorized,
+  isActiveUser,
+  authorize,
+} = require("../middlewares/routeProtect");
 
 router
   .route("/")
@@ -31,6 +36,12 @@ router.get("/trend", getTrendHouses);
 router
   .route("/:id")
   .get(getHouse)
+  .patch(
+    isAuthorized,
+    isActiveUser,
+    authorize("super_admin", "admin"),
+    blockHouse
+  )
   .put(isAuthorized, isActiveUser, updateHouse)
   .delete(isAuthorized, isActiveUser, deleteHouse);
 

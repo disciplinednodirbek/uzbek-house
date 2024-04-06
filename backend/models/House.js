@@ -70,6 +70,10 @@ const HouseSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    status: {
+      type: String,
+      default: "PENDING",
+    },
     type: {
       type: String,
       required: [true, "Please add type"],

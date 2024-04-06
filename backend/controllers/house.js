@@ -14,7 +14,14 @@ const imagekit = new ImageKit({
 exports.getAllHouses = asyncHandler(async (req, res, next) => {
   console.log(req.query);
   const { address, type, min_price, max_price, balcony, region_id } = req.query;
-  let query = {};
+  let query = { status: "CONFIRMED" };
+  if (
+    req.user &&
+    (req.user.role == "super_admin" || req.user.role == "admin")
+  ) {
+    query = {};
+  }
+
   if (address) {
     query.address = { $regex: new RegExp(address, "i") };
   }
@@ -50,7 +57,8 @@ exports.getAllHouses = asyncHandler(async (req, res, next) => {
     .populate("region_id")
     .populate("current_condition")
     .populate("unit_type")
-    .populate("available_time").populate("user");
+    .populate("available_time")
+    .populate("user");
 
   if (req.user && req.user._id.toString()) {
     houses = houses.filter(
@@ -98,6 +106,24 @@ exports.getHouse = asyncHandler(async (req, res, next) => {
   }
 
   res.status(200).json({ success: true, data: house });
+});
+
+// description   block single house
+// route         PATCH /api/v1/houses/:id
+// access        Private
+exports.blockHouse = asyncHandler(async (req, res, next) => {
+  const house = await House.findById(req.params.id);
+
+  if (!house) {
+    return next(
+      new ErrorResponse(`House not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  house.status = req.body.status;
+  await house.save();
+
+  res.status(200).json({ success: true });
 });
 
 // description   Create new house
