@@ -11,10 +11,78 @@ const imagekit = new ImageKit({
   urlEndpoint: "https://ik.imagekit.io/j4pvd3slcf",
 });
 
-exports.getAllHouses = asyncHandler(async (req, res, next) => {
+exports.getAllConfirmedHouses = asyncHandler(async (req, res, next) => {
   console.log(req.query);
   const { address, type, min_price, max_price, balcony, region_id } = req.query;
   let query = { status: "CONFIRMED" };
+
+  if (address) {
+    query.address = { $regex: new RegExp(address, "i") };
+  }
+
+  if (type) {
+    query.type = type;
+  }
+  if (region_id) {
+    query.region_id = region_id;
+  }
+
+  if (min_price) {
+    query.price = { $gte: min_price };
+  }
+  if (max_price) {
+    query.price = { ...query.price, $lte: max_price };
+  }
+
+  if (balcony !== undefined) {
+    query.balcony = balcony;
+  }
+
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+
+  const total = await House.countDocuments(query);
+  let houses = await House.find(query)
+    .sort({ createdAt: -1 })
+    .skip(startIndex)
+    .limit(limit)
+    .populate("region_id")
+    .populate("current_condition")
+    .populate("unit_type")
+    .populate("available_time")
+    .populate("user");
+
+  if (req.user && req.user._id.toString()) {
+    houses = houses.filter(
+      (house) => !house.hiddenFor.includes(req.user._id.toString())
+    );
+  }
+
+  const pagination = { next: null, prev: null };
+
+  if (endIndex < total) {
+    pagination.next = page + 1;
+  }
+
+  if (startIndex > 0) {
+    pagination.prev = page - 1;
+  }
+
+  res.status(200).json({
+    success: true,
+    total,
+    limit,
+    pagination,
+    data: houses,
+  });
+});
+
+exports.getAllHouses = asyncHandler(async (req, res, next) => {
+  console.log(req.query);
+  const { address, type, min_price, max_price, balcony, region_id } = req.query;
+  let query = {};
   if (
     req.user &&
     (req.user.role == "super_admin" || req.user.role == "admin")

@@ -11,6 +11,7 @@ const {
   getSuggestedHouses,
   getTrendHouses,
   blockHouse,
+  getAllConfirmedHouses,
 } = require("../controllers/house");
 
 const router = express.Router();
@@ -23,8 +24,17 @@ const {
 
 router
   .route("/")
-  .get(getAllHouses)
+  .get(getAllConfirmedHouses)
   .post(isAuthorized, isActiveUser, createHouse);
+
+router
+  .route("/all")
+  .get(
+    isAuthorized,
+    isActiveUser,
+    authorize("super_admin", "admin"),
+    getAllHouses
+  );
 
 router.route("/me").get(isAuthorized, isActiveUser, getOwnHouses);
 
