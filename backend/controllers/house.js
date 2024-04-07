@@ -246,6 +246,19 @@ exports.createHouse = asyncHandler(async (req, res, next) => {
 exports.updateHouse = asyncHandler(async (req, res, next) => {
   let house = await House.findById(req.params.id);
 
+  if (!req.body.location || !Array.isArray(req.body.location)) {
+    return next(
+      new ErrorResponse("Location must be provided as an array", 400)
+    );
+  }
+
+  const location = {
+    type: "Point",
+    coordinates: req.body.location,
+  };
+
+  delete req.body.location;
+
   if (!house) {
     return next(
       new ErrorResponse(`House not found with id of ${req.params.id}`, 404)
