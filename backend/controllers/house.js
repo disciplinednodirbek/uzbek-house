@@ -252,12 +252,10 @@ exports.updateHouse = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const location = {
+  req.body.location = {
     type: "Point",
     coordinates: req.body.location,
   };
-
-  delete req.body.location;
 
   if (!house) {
     return next(
