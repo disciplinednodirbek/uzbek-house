@@ -20,6 +20,14 @@ exports.email_login = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, user: req.user });
 });
 
+exports.email_login_admin = asyncHandler(async (req, res, next) => {
+  if (req.user.role == "admin" || req.user.role == "super_admin") {
+    res.status(200).json({ success: true, user: req.user });
+  } else {
+    next(new ErrorResponse("you dont have permission", 400));
+  }
+});
+
 exports.passportLogin = passport.authenticate("email_login", { session: true });
 
 exports.passportRegister = passport.authenticate("email_register", {

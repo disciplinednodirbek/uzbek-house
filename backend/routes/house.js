@@ -46,12 +46,7 @@ router.get("/trend", getTrendHouses);
 router
   .route("/:id")
   .get(getHouse)
-  .patch(
-    isAuthorized,
-    isActiveUser,
-    authorize("super_admin", "admin"),
-    blockHouse
-  )
+  .patch(isAuthorized, isActiveUser, blockHouse)
   .put(isAuthorized, isActiveUser, updateHouse)
   .delete(isAuthorized, isActiveUser, deleteHouse);
 

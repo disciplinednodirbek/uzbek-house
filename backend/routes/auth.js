@@ -7,10 +7,12 @@ const {
   authGoogleRedirect,
   logout,
   passportLogin,
+  email_login_admin,
   passportRegister,
 } = require("../controllers/auth");
 const { isAuthorized, isActiveUser } = require("../middlewares/routeProtect");
 
+router.post("/email_login/admin", passportLogin, isActiveUser, email_login_admin);
 router.post("/email_login", passportLogin, isActiveUser, email_login);
 router.post("/email_register", passportRegister, email_register);
 router.get("/google", authGoogle);
