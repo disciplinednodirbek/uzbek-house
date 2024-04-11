@@ -12,8 +12,9 @@ const imagekit = new ImageKit({
 });
 
 exports.getAllConfirmedHouses = asyncHandler(async (req, res, next) => {
-  console.log(req.query);
-  const { address, type, min_price, max_price, balcony, region_id } = req.query;
+  const { address, type, min_price, max_price, balcony, region_id, search } =
+    req.query;
+
   let query = { status: "CONFIRMED" };
 
   if (address) {
@@ -23,6 +24,7 @@ exports.getAllConfirmedHouses = asyncHandler(async (req, res, next) => {
   if (type) {
     query.type = type;
   }
+
   if (region_id) {
     query.region_id = region_id;
   }
@@ -30,6 +32,7 @@ exports.getAllConfirmedHouses = asyncHandler(async (req, res, next) => {
   if (min_price) {
     query.price = { $gte: min_price };
   }
+
   if (max_price) {
     query.price = { ...query.price, $lte: max_price };
   }
@@ -38,12 +41,32 @@ exports.getAllConfirmedHouses = asyncHandler(async (req, res, next) => {
     query.balcony = balcony;
   }
 
+  if (search) {
+    const searchRegex = new RegExp(search, "i");
+    query.$or = [
+      { fullName: searchRegex },
+      { email: searchRegex },
+      { phone_number: searchRegex },
+      { maintenance_description: searchRegex },
+      { type: searchRegex },
+      { address: searchRegex },
+      { $expr: { $eq: [{ $toString: "$year_build" }, search] } },
+      { $expr: { $eq: [{ $toString: "$bathroom_count" }, search] } },
+      { $expr: { $eq: [{ $toString: "$bedroom_count" }, search] } },
+      { $expr: { $eq: [{ $toString: "$kitchen_count" }, search] } },
+      { $expr: { $eq: [{ $toString: "$square_yard" }, search] } },
+      { $expr: { $eq: [{ $toString: "$price" }, search] } },
+      { $expr: { $eq: [{ $toString: "$zip_code" }, search] } },
+    ];
+  }
+
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 10;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
   const total = await House.countDocuments(query);
+
   let houses = await House.find(query)
     .sort({ createdAt: -1 })
     .skip(startIndex)
